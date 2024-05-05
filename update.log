@@ -1,0 +1,13 @@
+Array
+(
+    [message] => Array
+        (
+            [chat] => Array
+                (
+                    [id] => 123456789
+                )
+
+            [text] => /signup
+        )
+
+)
