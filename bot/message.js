@@ -6,7 +6,7 @@ const { start,requestContact } = require('./helper/start');
 
 //const {get_all_users} = require('./helper/users')
  const {get_all_users} = require('./helper/users')
- const {get_all_categories} = require('./helper/category')
+const {get_all_categories,new_category} = require('./helper/category')
 
 bot.on('message', async msg => {
     const chatId = msg.from.id;
@@ -16,24 +16,28 @@ bot.on('message', async msg => {
 
 
 
-    if (text === '/start') { 
+    if (text === '/start') {  
         start(msg);
     }
 
-    if(user) {
+     if(user) {
         if(user.action === 'request_contact' &&  !user.phone){
-            requestContact(msg)
-        }
-        if ( text == 'Users'){
+             requestContact(msg)
+      }
+     if ( text == 'Users'){
           get_all_users(msg)
 
         }
 
-        if ( text == 'Catalog'){
-            get_all_categories(msg)
+    if ( text == 'Catalog'){
+         get_all_categories(msg)
   
-          }
+   }
 
-    }
+   if(user.action === 'add_category'){
+    new_category(msg)
+   }
 
-});
+ }
+
+}); 

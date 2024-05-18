@@ -1,20 +1,20 @@
-const adminKeyboard = [
+ const adminKeyboard = [
     [{
         text : 'Users'
     },
         {
-            text: 'Catalog'
+           text: 'Catalog'
         }
-    ]  
-    ]
+     ]  
+     ]
 
-const userKeyboard = [
-    [
-        {
-            text: 'Catalog'
-        }
-    ]  
-    ]
+ const userKeyboard = [
+// //     // [
+// //     //     {
+// //     //         text: 'Catalog'
+// //     //     }
+// //     // ]  
+     ]
 
 module.exports = {
     adminKeyboard,

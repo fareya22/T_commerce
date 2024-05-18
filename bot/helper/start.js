@@ -19,28 +19,29 @@ const start = async (msg) => {
         await newUser.save();
 
         bot.sendMessage(chatId,
-            `Hellow ${msg.from.first_name}. Share your Phone number`,
+            `Hellow ${msg.from.first_name}.Please, Share your Phone number`,
             {
                 reply_markup: { 
                     keyboard: [
                         [{
-                            text: 'Share Your Phone number h',
+                            text: 'Share Your Phone number',
                             request_contact: true
-                        }]
+                        },]
                     ],
                     resize_keyboard: true
                 }
             });
 
-      // console.log(msg)
-    } else {
-        await User.findByIdAndUpdate (checkUser._id,
-            {
-            ...checkUser,
-            action : 'menu' 
+       //console.log(msg)
+    } 
+   else {
+         await User.findByIdAndUpdate (checkUser._id,
+         {
+           ...checkUser,
+         action : 'menu' 
 
-            },
-            {new:true}
+          },
+           {new:true}
     )
     bot.sendMessage(chatId,`Select the menu, ${checkUser.admin ?
         'Admin': checkUser.name}`,{
@@ -48,40 +49,43 @@ const start = async (msg) => {
             keyboard: checkUser.admin ? adminKeyboard : userKeyboard,
                 resize_keyboard:true
                
-        },
+     },
         
-       })
+      })
     
     }
 }
 
-const requestContact = async ( msg)=>{
- // console.log(msg) 
+ const requestContact = async ( msg)=>{
+ console.log(msg) 
 
- const chatId = msg.from.id
- if(msg.contact.phone_number){
+  const chatId = msg.from.id
+  if(msg.contact.phone_number){
     let user = await User.findOne({chatId}).lean() 
-   user.phone = msg.contact.phone_number
-   user.admin = msg.contact.phone_number == '+8801732277419'
-    user.action = 'menu'
-   await User.findByIdAndUpdate(user._id, user, {new:true}) 
+   user.phone = msg.contact.phone_number;
+   user.admin = msg.contact.phone_number == '+8801732277419';
+    user.action = 'menu';
+    await User.findByIdAndUpdate(user._id, user, {new:true}) 
 
    bot.sendMessage(chatId,`Select the menu, ${user.admin ?
     'Admin': user.name}`,{
     reply_markup:{
-        keyboard: user.admin ? adminKeyboard : userKeyboard,
+        keyboard: 
+        user.admin ? adminKeyboard : userKeyboard,
             resize_keyboard:true
            
     },
+    //resize_keyboard: true    
     
    })
 
- }
+  }
 
    
-}
-
+ }
+ 
 module.exports = {   
     start,
-    requestContact   
+    requestContact
+    
 };

@@ -6,7 +6,7 @@ const {adminKeyboard, userKeyboard} = require('../menu/keyboard')
 const get_all_users = async (msg) => {
         const chatId = msg.from.id
         let user = await User.findOne({chatId}).lean()
-        if (user.admin){
+       if (user.admin){
         let users = await User.find().lean()
        
         let list = ''
@@ -16,10 +16,10 @@ const get_all_users = async (msg) => {
         })
 
 
-        bot.sendMessage(chatId, `Users list here :
+        bot.sendMessage(chatId, `Users list is here :
       ${list}
         `)
-        } else {
+         } else {
         bot.sendMessage(chatId, `request is not possible`, 
         {
     reply_markup: {
@@ -27,8 +27,8 @@ const get_all_users = async (msg) => {
     resize_keyboard: true
     }
 })
-}
-}
+ }
+ }
 module.exports = {
 get_all_users
 }
