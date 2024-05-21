@@ -1,6 +1,8 @@
 const { bot } = require('../bot');
 const User = require('../../model/user');
- const Category = require('../../model/category')
+ const Category = require('../../model/category');
+ const Product = require('../../model/product')
+
 
 
 const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
@@ -11,8 +13,8 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
         /* const chatId = msg.from.id */
       let user = await User.findOne({chatId}).lean()
 
-      let limit = 5
-      let skip = (page - 1)*limit
+      let limit = 5;
+      let skip = (page - 1)*limit;
       console.log('page',page);
       if(page == 1){
         await User.findByIdAndUpdate(user._id,{...user,action:'category-1'},{new:true})
@@ -47,7 +49,7 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
                 ...list,
                 [{
                     text : ' Back',
-                    callback_data: 'back_category'
+                    callback_data: page > 1 ? 'back_category' : page,
                 },
             {
                 text: page,
@@ -55,19 +57,20 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
             },
         {
             text : ' Next',
-            callback_data: 'next_category'
-        } ],
+            callback_data: limit == categories.length ? 'next_category': page ,
+        } ,
+    ],
       user.admin ?  [
     {
         text : ' Add category',
         callback_data: 'add_category'
     }
-] : []
-            ]
-        }
-    })
+] : [],
+            ],
+        },
+    });
 
- }
+ };
 
  const add_category =async (chatId) => {
     let user = await User.findOne({chatId}).lean()
@@ -111,19 +114,14 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
  const pagination_category = async (chatId,action)=>{
     let user = await User.findOne({chatId}).lean()
     let page = 1 
-    console.log(user.action)
+    //console.log(user.action);
 
     if(user.action.includes('category-')){
         page = +user.action.split('-')[1]
-        console.log(page)
-        // if ( action == 'next_category'){
-        //     page++
-        // }
+        console.log(page);
         if(action == 'back_category' && page > 1){
             page--
         }
-        // get_all_categories(chatId,page);
-
     } 
         if ( action == 'next_category'){
             page++
@@ -134,8 +132,7 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
         get_all_categories(chatId,page);
   
 
-
-    /*
+    /*  ( ei tukur logic bad dite pari)
     next_category -5
     prev_category - 6 
     category - 1 -> ['category' , '1']
@@ -146,10 +143,68 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
 
  }
 
+ const show_category = async ( chatId , id, page = 1 ) => {
+    let category = await Category.findById(id).lean()
+    let user = await User.findOne({chatId}).lean()
+    let limit = 5;
+    let skip = (page - 1)*limit;
+    let products = await Product.find({category: category._id}).skip(skip).limit(limit).lean()
+    
+    let list = products.map(product =>
+        [
+            {
+                text: product.title,
+                callback_data : `product_${product._id}`
+            }
+        ] 
+    )
+
+    bot.sendMessage(chatId, `${category.title} Products in the Category :  `,{
+        reply_markup:{
+            remove_keyboard:true,
+            inline_keyboard:[
+                ...list,
+         [
+            {
+                    text : ' Back',
+                    callback_data: page > 1 ? 'back_product' : page,
+            },
+            {
+                text: page,
+                callback_data: '0'
+            },
+        {
+            text : ' Next',
+            callback_data: limit == products.length ? 'next_product': page ,
+        } ,
+        ],
+    user.admin 
+        ? 
+         [
+        {
+            text : ' Add Product',
+            callback_data: `add_product_${category._id}`
+        }
+        ],
+    [
+        {
+            text: 'Edit Category',
+            callback_data: `edit_category-${category._id}`
+        }
+    ],
+    : [],
+                ],
+            },
+        },
+    );
+
+    };
+
 
 module.exports = {
     get_all_categories,
     add_category,
     new_category,
-    pagination_category
+    pagination_category,
+    show_category,
 }
