@@ -13,6 +13,10 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
 
       let limit = 5
       let skip = (page - 1)*limit
+      console.log('page',page);
+      if(page == 1){
+        await User.findByIdAndUpdate(user._id,{...user,action:'category-1'},{new:true})
+      }
 
       /*
 
@@ -24,7 +28,7 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
       let categories = await Category.find().skip(page).limit(limit).lean()
 
 
-    console.log(categories)
+    //console.log(categories);
 
     let list = categories.map(category =>
         [
@@ -33,8 +37,8 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
                 callback_data : `category_${category._id}`
             }
         ] 
-    )
-    console.log(list)
+    );
+    //console.log(list);
     
     bot.sendMessage(chatId, `Category list: `,{
         reply_markup:{
@@ -46,7 +50,7 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
                     callback_data: 'back_category'
                 },
             {
-                text: '1',
+                text: page,
                 callback_data: '0'
             },
         {
@@ -107,24 +111,28 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
  const pagination_category = async (chatId,action)=>{
     let user = await User.findOne({chatId}).lean()
     let page = 1 
+    console.log(user.action)
 
     if(user.action.includes('category-')){
         page = +user.action.split('-')[1]
-        if ( action == 'next_category'){
-            page++
-        }
-        if(action == 'prev_category' && page > 1){
+        console.log(page)
+        // if ( action == 'next_category'){
+        //     page++
+        // }
+        if(action == 'back_category' && page > 1){
             page--
         }
-        get_all_categories(chatId,page);
+        // get_all_categories(chatId,page);
 
-    } else {
+    } 
         if ( action == 'next_category'){
             page++
         }
-        get_all_categories(chatId,page);
+        
 
-    }
+        await User.findByIdAndUpdate(user._id,{...user,action:`category-${page}`},{new:true})
+        get_all_categories(chatId,page);
+  
 
 
     /*
