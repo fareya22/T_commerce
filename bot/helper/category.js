@@ -7,8 +7,8 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
 // const category = require('../../model/category');
 
 
- const get_all_categories = async (msg, page = 1)=>{
-        const chatId = msg.from.id
+ const get_all_categories = async (chatId, page = 1)=>{
+        /* const chatId = msg.from.id */
       let user = await User.findOne({chatId}).lean()
 
       let limit = 5
@@ -97,7 +97,7 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
             ...user,
             action: 'category'
         })
-        get_all_categories(msg)
+        get_all_categories(chatId)
 
     } else {
         bot.sendMessage(chatId, `request is not possible`)
@@ -106,7 +106,34 @@ const {adminKeyboard , userKeyboard} = require ('../menu/keyboard');
 
  const pagination_category = async (chatId,action)=>{
     let user = await User.findOne({chatId}).lean()
-    
+    let page = 1 
+
+    if(user.action.includes('category-')){
+        page = +user.action.split('-')[1]
+        if ( action == 'next_category'){
+            page++
+        }
+        if(action == 'prev_category' && page > 1){
+            page--
+        }
+        get_all_categories(chatId,page);
+
+    } else {
+        if ( action == 'next_category'){
+            page++
+        }
+        get_all_categories(chatId,page);
+
+    }
+
+
+    /*
+    next_category -5
+    prev_category - 6 
+    category - 1 -> ['category' , '1']
+
+    if(category-) split(-) 1 -> next_category ++ prev_category --
+ */
 
 
  }

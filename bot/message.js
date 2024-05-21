@@ -30,7 +30,7 @@ bot.on('message', async msg => {
         }
 
     if ( text == 'Catalog'){
-         get_all_categories(msg)
+         get_all_categories(chatId)
   
    }
 
