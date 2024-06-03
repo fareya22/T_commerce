@@ -6,7 +6,7 @@ const { start,requestContact } = require('./helper/start');
 
 //const {get_all_users} = require('./helper/users')
  const {get_all_users} = require('./helper/users')
-const {get_all_categories,new_category} = require('./helper/category')
+const {get_all_categories,new_category, save_category} = require('./helper/category')
 
 bot.on('message', async msg => {
     const chatId = msg.from.id;
@@ -36,6 +36,10 @@ bot.on('message', async msg => {
 
    if(user.action === 'add_category'){
     new_category(msg)
+   }
+
+   if(user.action === 'edit_category-'){
+    save_category(chatId,text)
    }
 
  }

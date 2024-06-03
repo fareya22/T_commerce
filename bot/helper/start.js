@@ -75,7 +75,7 @@ const start = async (msg) => {
             resize_keyboard:true
            
     },
-    //resize_keyboard: true    
+    
     
    })
 
