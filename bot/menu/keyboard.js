@@ -9,11 +9,11 @@
      ]
 
  const userKeyboard = [
-// //     // [
-// //     //     {
-// //     //         text: 'Catalog'
-// //     //     }
-// //     // ]  
+    [
+        {
+            text: 'Catalog'
+        }
+    ]  
      ]
 
 module.exports = {

@@ -62,25 +62,21 @@ const start = async (msg) => {
   const chatId = msg.from.id
   if(msg.contact.phone_number){
     let user = await User.findOne({chatId}).lean() 
-   user.phone = msg.contact.phone_number;
-   user.admin = msg.contact.phone_number == '+8801732277419';
+    user.phone = msg.contact.phone_number;
+    user.admin = msg.contact.phone_number == '+8801732277419';
     user.action = 'menu';
     await User.findByIdAndUpdate(user._id, user, {new:true}) 
 
-   bot.sendMessage(chatId,`Select the menu, ${user.admin ?
-    'Admin': user.name}`,{
-    reply_markup:{
+    bot.sendMessage(chatId,`Select the menu, ${user.admin ?
+     'Admin': user.name}`,{
+     reply_markup:{
         keyboard: 
         user.admin ? adminKeyboard : userKeyboard,
             resize_keyboard:true
            
-    },
-    
-    
-   })
-
+     },      
+    })
   }
-
    
  }
  

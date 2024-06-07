@@ -3,12 +3,15 @@ const User = require('../../model/user');
 const Category = require('../../model/category');
 const Product = require('../../model/product');
 const { adminKeyboard, userKeyboard } = require('../menu/keyboard');
+const {clear_draft_product} = require('../helper/product')
 
-const get_all_categories = async (chatId, page = 1) => {
+const get_all_categories = async (chatId, page = 1,message_id = null) => {
+
+    clear_draft_product()
     let user = await User.findOne({ chatId }).lean();
 
     let limit = 5;
-    let skip = (page - 1) * limit;
+    let skip = (page - 1) * limit
 
     if (page == 1) {
         await User.findByIdAndUpdate(
@@ -19,7 +22,7 @@ const get_all_categories = async (chatId, page = 1) => {
     }
    
     let categories = await Category.find().skip(skip). limit (limit). lean();
-    if (categories.length == 0){
+    if (categories.length == 0 && skip > 0){
         page--
         await User.findByIdAndUpdate(
             user._id, 
@@ -39,34 +42,41 @@ const get_all_categories = async (chatId, page = 1) => {
         }
     ]);
 
-    bot.sendMessage(chatId, `Category list: `, {
-        reply_markup: {
-            remove_keyboard: true,
-            inline_keyboard: [
-                ...list,
-                [
-                    {
-                        text: ' Back',
-                        callback_data: page > 1 ? 'back_category' : page,
-                    },
-                    {
-                        text: page.toString(),
-                        callback_data: '0'
-                    },
-                    {
-                        text: ' Next',
-                        callback_data: limit === categories.length ? 'next_category' : page,
-                    },
-                ],
-                user.admin ? [
-                    {
-                        text: ' Add category',
-                        callback_data: 'add_category'
-                    }
-                ] : [],
-            ],
+ const inline_keyboard = [
+    ...list,
+    [
+        {
+            text: ' Back',
+            callback_data: page > 1 ? 'back_category' : page,
         },
-    });
+        {
+            text: page.toString(),
+            callback_data: '0'
+        },
+        {
+            text: ' Next',
+            callback_data: limit === categories.length ? 'next_category' : page,
+        },
+    ],
+    user.admin ? [
+        {
+            text: ' Add category',
+            callback_data: 'add_category'
+        }
+    ] : [],
+]
+
+    if(message_id > 0){
+        bot.editMessageReplyMarkup({inline_keyboard},{chat_Id:chatId, message_id})
+    }else{
+        bot.sendMessage(chatId, `Category list: `, {
+            reply_markup: {
+                remove_keyboard: true,
+                inline_keyboard,
+            },
+        })
+    }
+
 };
 
 const add_category = async (chatId) => {
@@ -80,7 +90,7 @@ const add_category = async (chatId) => {
 
         bot.sendMessage(chatId, 'Add new category name ');
     } else {
-        bot.sendMessage(chatId, `request is not possible`);
+        bot.sendMessage(chatId, 'request is not possible');
     }
 };
 
@@ -101,11 +111,11 @@ const new_category = async (msg) => {
         });
         get_all_categories(chatId);
     } else {
-        bot.sendMessage(chatId, `request is not possible`);
+        bot.sendMessage(chatId, 'request is not possible');
     }
 };
 
-const pagination_category = async (chatId, action) => {
+const pagination_category = async (chatId, action,message_id = null) => {
     let user = await User.findOne({ chatId }).lean();
     let page = 1;
 
@@ -118,7 +128,7 @@ const pagination_category = async (chatId, action) => {
         }
 
         await User.findByIdAndUpdate(user._id, { ...user, action: `category-${page}` }, { new: true });
-        get_all_categories(chatId, page);
+        get_all_categories(chatId, page,message_id);
     }
 };
 
@@ -129,7 +139,12 @@ const show_category = async (chatId, id, page = 1) => {
 
     let limit = 5;
     let skip = (page - 1) * limit;
-    let products = await Product.find({ category: category._id }).skip(skip).limit(limit).lean();
+    let products = await Product.find({ category: category._id , status:
+    1 })
+    .skip(skip)
+    .limit(limit)
+    .sort({_id: -1})
+    .lean();
 
     let list = products.map(product => [
         {
@@ -138,9 +153,7 @@ const show_category = async (chatId, id, page = 1) => {
         }
     ]);
     
-    const userKeyboards = [
-
-    ];
+    const userKeyboards = [];
 
     const adminKeyboards = [
         [
@@ -196,7 +209,7 @@ const remove_category = async (chatId,id) => {
         await User.findByIdAndUpdate(user._id,{...user, action: 'del_category'},{new:true})
         bot.sendMessage(
             chatId,
-            `Do you want to delete category $(category.title)?`,
+            `Do you want to delete category ${category.title}?`,
           {
             reply_markup: {
                  inline_keyboard: [
@@ -239,7 +252,7 @@ const edit_category = async (chatId,id) => {
     bot.sendMessage(chatId,`${category.title} is the new item to the category.`)
 }
 
-const save_category = async (chatId,id) => {
+const save_category = async (chatId,title) => {
     let user = await User.findOne({chatId}).lean()
     await User.findByIdAndUpdate(user._id,{...user, action: 'menu'},{new:true})
     let id = user.action.split('-')[1]
