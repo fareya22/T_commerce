@@ -6,7 +6,7 @@ const User = require('../model/user')
     pagination_category,
     show_category,
     remove_category,
-    edit_caregory,
+    edit_category,
     get_all_categories
 } = require('./helper/category')
 
@@ -25,18 +25,18 @@ const {
 bot.on('callback_query',async query =>{
     //console.log(query);
 
-   const {data} = query
-   const chatId = query.from.id
+   const {data} = query;
+   const chatId = query.from.id;
 
    await bot.answerCallbackQuery(query.id);
-  // console.log(data)
+  console.log(data)
 
    if(data === 'add_category' ){
     add_category(chatId)
    }
   
    if( data.includes('map_order-')){
-    let id = data.split('-');
+    let id = data.split('-')[1];
     console.log(id);
      show_location(chatId, id);
     return
@@ -75,9 +75,9 @@ bot.on('callback_query',async query =>{
    }
 
    if( ['next_category' , 'back_category'].includes(data)){
-    pagination_category(chatId, data,query.message.message_id)
-    
+    pagination_category(chatId, data,query.message.message_id) 
    }
+
    if ( data.includes('category_')){
     let id = data.split('_')[1]; 
     show_category(chatId,id)
@@ -86,12 +86,11 @@ bot.on('callback_query',async query =>{
    if ( data.includes('del_category-')){
     let id = data.split('-')[1];
     remove_category(chatId,id)
-
    }
 
    if ( data.includes('edit_category-')){
     let id = data.split('-')[1];
-    edit_caregory(chatId,id)
+    edit_category(chatId,id)
 
    }
    
@@ -102,7 +101,7 @@ bot.on('callback_query',async query =>{
 
 
    if (data.includes('product_')){
-    let id = data.split('-')[1];
+    let id = data.split('_')[1];
     show_product(chatId,id)
    }
 

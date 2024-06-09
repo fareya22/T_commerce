@@ -12,12 +12,13 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
 
     let limit = 5;
     let skip = (page - 1) * limit
+   // console.log('page',page);
+   
 
     if (page == 1) {
         await User.findByIdAndUpdate(
             user._id, 
-            { ...user, action: 'category-1' }, 
-            { new: true }
+            { ...user, action: 'category-1' },{ new: true }
         );
     }
    
@@ -26,7 +27,7 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
         page--
         await User.findByIdAndUpdate(
             user._id, 
-            { ...user, action: `category-${page}` },
+            { ...user, action: `category-${page}` },   
             { new: true }
         );
         console.log('page',page,user.action);
@@ -46,7 +47,7 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
     ...list,
     [
         {
-            text: ' Back',
+            text: 'Back',
             callback_data: page > 1 ? 'back_category' : page,
         },
         {
@@ -54,13 +55,14 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
             callback_data: '0'
         },
         {
-            text: ' Next',
+            text: 'Next',
             callback_data: limit === categories.length ? 'next_category' : page,
         },
     ],
-    user.admin ? [
+    user.admin
+     ? [
         {
-            text: ' Add category',
+            text: 'Add category',
             callback_data: 'add_category'
         }
     ] : [],
@@ -118,13 +120,12 @@ const new_category = async (msg) => {
 const pagination_category = async (chatId, action,message_id = null) => {
     let user = await User.findOne({ chatId }).lean();
     let page = 1;
-
     if (user.action.includes('category-')) {
-        page = +user.action.split('-')[1];
-        if (action === 'back_category' && page > 1) {
-            page--;
-        } else if (action === 'next_category') {
-            page++;
+        page = +user.action.split('-')[1]
+        if (action == 'back_category' && page > 1) {
+            page--
+        } else if (action == 'next_category') {
+            page++
         }
 
         await User.findByIdAndUpdate(user._id, { ...user, action: `category-${page}` }, { new: true });
@@ -135,7 +136,7 @@ const pagination_category = async (chatId, action,message_id = null) => {
 const show_category = async (chatId, id, page = 1) => {
     let category = await Category.findById(id).lean();
     let user = await User.findOne({ chatId }).lean();
-    await User.findByIdAndUpdate(user._id, { ...user, action: `category-${page}` }, { new: true });
+    await User.findByIdAndUpdate(user._id, { ...user, action: `category_${category._id}` }, { new: true });
 
     let limit = 5;
     let skip = (page - 1) * limit;
@@ -158,8 +159,8 @@ const show_category = async (chatId, id, page = 1) => {
     const adminKeyboards = [
         [
             {
-                text: ' Add Product',
-                callback_data: `add_product_${category._id}`,
+                text: 'Add Product',
+                callback_data: `add_product-${category._id}`,
             }
         ],
         [
@@ -184,16 +185,17 @@ const show_category = async (chatId, id, page = 1) => {
                 ...list,
                 [
                     {
-                        text: ' Back',
+                        text: 'Back',
                         callback_data: page > 1 ? 'back_product' : page,
                     },
                     {
-                        text: page.toString(),
+                        text: page,
                         callback_data: '0'
                     },
                     {
-                        text: ' Next',
-                        callback_data: limit === products.length ? 'next_product' : page,
+                        text: 'Next',
+                        callback_data: limit === products.length ? 'next_product' : 
+                        page,
                     },
                 ],
                 ... keyboards,
@@ -205,7 +207,7 @@ const show_category = async (chatId, id, page = 1) => {
 const remove_category = async (chatId,id) => {
     let user = await User.findOne({chatId}).lean()
     let category = await Category.findById(id).lean()
-    if (user.action != 'del_category'){
+    if (user.action !== 'del_category'){
         await User.findByIdAndUpdate(user._id,{...user, action: 'del_category'},{new:true})
         bot.sendMessage(
             chatId,
@@ -220,7 +222,7 @@ const remove_category = async (chatId,id) => {
                         },
                         {
                             text: 'Delete',
-                            callback_data: `category_${category._id}`,
+                            callback_data: `del_category-${category._id}`,
                         },
                     ],
 
@@ -234,10 +236,10 @@ const remove_category = async (chatId,id) => {
        let products = await Product.find({category: category._id}).select(['_id']).lean() 
 
        await Promise.all(products.map(async (product) => {
-             await Product.findByIdAndRemove(product._id)
+             await Product.findByIdAndDelete(product._id)
         }))
 
-       await Category.findByIdAndRemove(id)
+       await Category.findByIdAndDelete(id)
        bot.sendMessage(chatId,`${category.title} has been deleted from menu.`)
     }
 }
@@ -246,7 +248,7 @@ const edit_category = async (chatId,id) => {
     let user = await User.findOne({chatId}).lean()
     let category = await Category.findById(id).lean()
     
-    await User.findByIdAndUpdate(user._id,{...user, action: 'edit_category'},{new:true})
+    await User.findByIdAndUpdate(user._id,{...user, action:`edit_category-${id}`},{new:true})
 
     
     bot.sendMessage(chatId,`${category.title} is the new item to the category.`)
@@ -257,10 +259,9 @@ const save_category = async (chatId,title) => {
     await User.findByIdAndUpdate(user._id,{...user, action: 'menu'},{new:true})
     let id = user.action.split('-')[1]
     let category = await Category.findById(id).lean()
-
     await Category.findByIdAndUpdate(id,{...category, title},{new:true})
-
-    bot.sendMessage(chatId,`The category has been updated.\nSelect from the menu`)
+    bot.sendMessage(chatId,`The category has been updated.
+        \nSelect from the menu`)       //not working
 }
 
 module.exports = {

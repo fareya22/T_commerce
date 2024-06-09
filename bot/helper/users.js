@@ -16,9 +16,8 @@ const get_all_users = async (msg) => {
         })
 
 
-        bot.sendMessage(chatId, `Users list is here :
-      ${list}
-        `)
+        bot.sendMessage(chatId, `Users list is here : 
+        ${list}`)
          } else {
         bot.sendMessage(chatId, `request is not possible`, 
         {

@@ -8,7 +8,7 @@ const ready_order = async(chatId,product,count) =>  {
     let orders = await Order.find({user,status: 0}).lean()
 
     await Promise.all(orders.map(async (order) =>{
-        await Order.findByIdAndRemove(order._id)
+        await Order.findByIdAndDelete(order._id)
     }))
 
     await User.findByIdAndUpdate(user._id,{
@@ -23,7 +23,7 @@ const ready_order = async(chatId,product,count) =>  {
         status: 0
     })
 
-    await newOrder.save()
+    const order = await newOrder.save()
 
     bot.sendMessage(chatId,`Send the delivery address to order the product`,{
         reply_markup: {
@@ -31,7 +31,8 @@ const ready_order = async(chatId,product,count) =>  {
                 [
                     {
                         text:'Send the location',
-                        request_location: true
+                        request_location: true,
+                        action: `order`
                     }
                 ]
             ],
@@ -108,14 +109,20 @@ const change_order = async (chatId,id,status) =>{
 }
 
 const show_location = async (chatId,_id) => {
-    let user = await User.findOne({chatId}).lean()
-if (user.admin){
-    let order = await Order.findById(_id).lean()
-    console.log(order.location)
-   // bot.sendLocation(chatId,order,location,latitude,order.location.longitude)
-}else{
-   await bot.sendMessage(chatId,`You are not allowed to enter this place`)
-}
+    try {
+        console.log({chatId, _id})
+        let user = await User.findOne({chatId}).lean()
+        if (user.admin){
+            let order = await Order.findById(_id).lean()
+            console.log(order.location)
+        bot.sendMessage(chatId,order.location)
+        }else{
+        await bot.sendMessage(chatId,`You are not allowed to enter this place`)
+        }
+    }
+    catch(e) {
+        console.log(e.message)
+    }
 
 }
 

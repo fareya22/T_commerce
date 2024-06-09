@@ -19,37 +19,25 @@ bot.on('message', async msg => {
 
 
     if (text === '/start') {  
-        start(msg);
+        
+      start(msg);
     }
 
-    if (msg.location && user.action == 'order'){
-      end_order(chatId,msg.location)
+    if ( user.action === 'order'){
+      end_order(chatId,msg.text)
     }
 
      if(user) {
         if(user.action === 'request_contact' &&  !user.phone){
              requestContact(msg)
         }
-         
-        // if(user.action === 'new_product_title'){
-        //   add_product_next(chatId,text,'title')
-        // }
 
-        // if(user.action === 'new_product_price'){
-        //   add_product_next(chatId,text,'price')
-        // }
-
-        // if(user.action === 'new_product_text'){
-        //   add_product_next(chatId,text,'text')
-        // }
-
-
-     if ( text == 'Users'){
+     if ( text === 'Users'){
           get_all_users(msg)
           return
         }
 
-    if ( text == 'Catalog'){
+    if ( text === 'Catalog'){
          get_all_categories(chatId)
           return
    }
@@ -57,6 +45,10 @@ bot.on('message', async msg => {
    if(user.action === 'add_category'){
     new_category(msg)
    }
+
+  //  if(user.action == 'order') {
+  //   console.log("call ashche")
+  //  }
 
    if(user.action === 'edit_category-'){
     save_category(chatId,text)

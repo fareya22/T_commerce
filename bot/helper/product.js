@@ -22,7 +22,6 @@ const add_product = async (chatId,category) => {
     bot.sendMessage(chatId,`Enter the name of the new product`)
 }    
 
-//const steps =['title','price','img','text']
 const steps ={
     'title':{
         action: 'new_product_price',
@@ -57,7 +56,7 @@ const add_product_next = async (chatId,value,slug) =>{
         bot.sendMessage(chatId,'A new product has been introduced')
 
     } else{
-        await Use.findByIdAndUpdate(user._id,{
+        await User.findByIdAndUpdate(user._id,{
                     ...user,
                     action:steps[slug].action
                 })  
@@ -76,18 +75,21 @@ const clear_draft_product = async() =>{
     let products = await Product.find({status:0}).lean()
     if(products){
         await Promise.all(products.map(async product =>{
-            await Product.findByIdAndRemove
-            (product._id)
+            await Product.findByIdAndDelete(product._id)
         }))
        
     }
 }
 
 const show_product = async(chatId,id,count = 1,message_id = null)=>{
-let product = await Product.findById(id).populate(['category']).lean()
-let user = await User.findOne(chatId).lean()
-const inline_keyboard = [
-    [
+    console.log({chatId, id})
+    try {
+        let product = await Product.findById(id).populate(['category']).lean()
+        console.log({product})
+        let user = await User.findOne({chatId: chatId}).lean()
+        console.log({user})
+    const inline_keyboard = [
+        [
         {
             text:'➖',
             callback_data: `less_count-${product._id}-${count}` 
@@ -101,8 +103,8 @@ const inline_keyboard = [
             callback_data: `more_count-${product._id}-${count}` 
         },
 
-    ],
-    user.admin ?
+        ],
+        user.admin ?
 
     [
         {
@@ -115,10 +117,34 @@ const inline_keyboard = [
             callback_data: `del_product-${product._id}`
         },
 
-    ] : [],
-    [
-        { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+        ] :
+        [
+            { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+        ]
     ]
+    
+        if(message_id > 0) {
+            bot.editMessageReplyMarkup({inline_keyboard},{chat_id: chatId, message_id})
+          
+          }else{
+              bot.sendPhoto(chatId,product.img,{
+                  caption: `${product.title}\n  
+                  🗃Category: ${product.category.title}\n
+                  💸Price: ${product.price} TK \n
+                   Description: ${product.text}`,
+                          parse_mode: 'HTML',
+                          reply_markup: {
+                              inline_keyboard
+                          }
+              
+              })
+          
+          }
+          
+    }
+    catch(e) {
+        console.log('error happend')
+    }
     // [
     //     {
     //         text: '💳Add to cart',
@@ -126,59 +152,45 @@ const inline_keyboard = [
     //     }
     // ]
 
-]
-
-if(message_id > 0) {
-
-  bot.editMessageReplyMarkup({inline_keyboard},{chat_id: chatId, message_id})
-
-}else{
-    bot.sendPhoto(chatId,product.img,{
-        caption: `<br>${product.title}<br>\n 🗃 
-        Category: ${product.category.title}\n💸
-         Price: ${product.price} TK \n
-         Description:\n ${product.text}`,
-                parse_mode: 'HTML',
-                reply_markup: {
-                    inline_keyboard
-                }
-    
-    })
-
-}
 }
 
 const delete_product = async(chatId,id,sure) => {
-    let user = await User.findOne(chatId).lean()
-    if(user.admin){
-        if(sure){
-            await Product.findByIdAndDelete(id)
-            bot.sendMessage(chatId,`The product was deleted`)
+    try{
+        let user = await User.findOne({chatId}).lean()
+        if(user.admin){
+            if(sure){
+                await Product.findByIdAndDelete(id)
+                bot.sendMessage(chatId,`The product was deleted`)
+            }
+            else{
+                bot.sendMessage(chatId,`Do you want to delete the product? `,{
+                    reply_markup:{
+                       inline_keyboard: [
+                           [
+                                  {
+                                       text: '❌ No',
+                                       callback_data: `catalog`
+                                   },
+           
+                                   {
+                                       text: '🆗 Yes',
+                                       callback_data: `rem_product-${id}`
+                                   }
+           
+                           ]
+                       ]
+                    }   
+                   })
+            }
         }
         else{
-            bot.sendMessage(chatId,`Do you want to delete the product? `,{
-                reply_markup:{
-                   inline_keyboard: [
-                       [
-                              {
-                                   text: '❌ No',
-                                   callback_data: `catalog`
-                               },
-       
-                               {
-                                   text: '🆗 Yes',
-                                   callback_data: `rem_product-${id}`
-                               }
-       
-                       ]
-                   ]
-                }   
-               })
+            bot.sendMessage(chatId,`You cannot delete the product!`)
         }
     }
-    else{
-        bot.sendMessage(chatId,`You cannot delete the product!`)
+    catch(e) {
+        console.log(e.message)
     }
+
 }
 
 module.exports = {
@@ -188,3 +200,5 @@ module.exports = {
     show_product,
     delete_product
 }
+
+
