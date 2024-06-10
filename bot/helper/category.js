@@ -10,7 +10,7 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
     clear_draft_product()
     let user = await User.findOne({ chatId }).lean();
 
-    let limit = 5;
+    let limit = 10;
     let skip = (page - 1) * limit
    // console.log('page',page);
    
@@ -35,7 +35,6 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
         return;
     } 
 
-
     let list = categories.map(category => [
         {
             text: category.title,
@@ -59,6 +58,7 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
             callback_data: limit === categories.length ? 'next_category' : page,
         },
     ],
+    
     user.admin
      ? [
         {
@@ -138,7 +138,7 @@ const show_category = async (chatId, id, page = 1) => {
     let user = await User.findOne({ chatId }).lean();
     await User.findByIdAndUpdate(user._id, { ...user, action: `category_${category._id}` }, { new: true });
 
-    let limit = 5;
+    let limit = 10;
     let skip = (page - 1) * limit;
     let products = await Product.find({ category: category._id , status:
     1 })

@@ -23,9 +23,9 @@ bot.on('message', async msg => {
       start(msg);
     }
 
-    if ( user.action === 'order'){
-      end_order(chatId,msg.text)
-    }
+    // if ( user.action === 'order'){
+    //   end_order(chatId,msg.text)
+    // }
 
      if(user) {
         if(user.action === 'request_contact' &&  !user.phone){
@@ -40,11 +40,19 @@ bot.on('message', async msg => {
     if ( text === 'Catalog'){
          get_all_categories(chatId)
           return
-   }
+        }
+
+        if ( text === 'Cart'){
+          view_cart(chatId)
+           return
+         }
 
    if(user.action === 'add_category'){
     new_category(msg)
    }
+
+
+  //if(user.action === 'view_cart')
 
   //  if(user.action == 'order') {
   //   console.log("call ashche")

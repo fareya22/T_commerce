@@ -104,11 +104,11 @@ const show_product = async(chatId,id,count = 1,message_id = null)=>{
         },
 
         ],
-        user.admin ?
+         user.admin ?
 
     [
         {
-            text: '✏ Edit',
+            text: '✏ Edit',//does nothing
             callback_data: `edit_product-${product._id}`
         },
         
@@ -119,8 +119,15 @@ const show_product = async(chatId,id,count = 1,message_id = null)=>{
 
         ] :
         [
-            { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+            {
+                text: '💳Add to cart',
+                callback_data: `add_cart-${product._id}`
+            }
         ]
+
+        // [
+        //      { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+        // ]
     ]
     
         if(message_id > 0) {
@@ -128,10 +135,7 @@ const show_product = async(chatId,id,count = 1,message_id = null)=>{
           
           }else{
               bot.sendPhoto(chatId,product.img,{
-                  caption: `${product.title}\n  
-                  🗃Category: ${product.category.title}\n
-                  💸Price: ${product.price} TK \n
-                   Description: ${product.text}`,
+                  caption: `${product.title}\n🗃Category: ${product.category.title}\n💸Price: ${product.price} TK\nDescription: \n${product.text}`,
                           parse_mode: 'HTML',
                           reply_markup: {
                               inline_keyboard
@@ -143,15 +147,8 @@ const show_product = async(chatId,id,count = 1,message_id = null)=>{
           
     }
     catch(e) {
-        console.log('error happend')
+        console.log(e.message)
     }
-    // [
-    //     {
-    //         text: '💳Add to cart',
-    //         callback_data: 'add_cart'
-    //     }
-    // ]
-
 }
 
 const delete_product = async(chatId,id,sure) => {

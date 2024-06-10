@@ -12,6 +12,9 @@
     [
         {
             text: 'Catalog'
+        },
+        {
+            text: 'Cart',
         }
     ]  
      ]
