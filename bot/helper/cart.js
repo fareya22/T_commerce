@@ -36,7 +36,7 @@ const add_to_cart = async (chatId, productId, quantity) => {
             });
         }
 
-        // Calculate total amount without using reduce
+    
         let totalAmount = 0;
         for (const item of cart.items) {
             if (!item.totalPrice) {
