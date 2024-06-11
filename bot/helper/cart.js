@@ -12,8 +12,8 @@ const add_to_cart = async (chatId, productId, quantity) => {
             bot.sendMessage(chatId, 'Product not found.');
             return;
         }
-
-        let cart = await Cart.findOne({ user: user._id });
+ 
+        let cart = await Cart.findOne({ user: user._id }); 
 
         if (!cart) {
             cart = new Cart({
@@ -27,7 +27,6 @@ const add_to_cart = async (chatId, productId, quantity) => {
 
         if (itemIndex > -1) {
             cart.items[itemIndex].quantity += quantity;
-            cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.price;
         } else {
             cart.items.push({
                 product: productId,
@@ -36,23 +35,27 @@ const add_to_cart = async (chatId, productId, quantity) => {
             });
         }
 
-    
+        // Recalculate totalAmount for the cart
         let totalAmount = 0;
         for (const item of cart.items) {
-            if (!item.totalPrice) {
-                throw new Error(`Invalid totalPrice for item with product ID: ${item.product}`);
+            if (isNaN(item.totalPrice) || item.totalPrice <= 0) {
+                item.totalPrice = item.quantity * product.price;
             }
             totalAmount += item.totalPrice;
         }
         cart.totalAmount = totalAmount;
+        //console.log(cart.totalAmount);
 
         await cart.save();
 
         bot.sendMessage(chatId, `Added ${quantity} ${product.title}(s) to your cart.`);
+        bot.sendMessage(chatId,`Total amount : ${cart.totalAmount}`);
     } catch (e) {
-        console.log(e.message)
+        console.log(e.message);
+        bot.sendMessage(chatId, 'An error occurred while adding to the cart.');
     }
 };
+
 
 
 
@@ -76,18 +79,16 @@ const view_cart = async (chatId) => {
         const inline_keyboard = [
             ...list,
             [
-                // {
-                //     text: 'Order Product',
-                //     callback_data: `order-${item.product._id}`,
-                // },
                 {
-                    text: '🗑 Clear Cart',
+                    text: `🗑 Clear Cart (Click each item to remove)`, 
                     callback_data: 'clear_cart',
                 },
-                // {
-                //     text: 'delete item',
-                //     callback_data: `delete_cart_item-${item.product._id}`,
-                // },
+            ],
+            [
+                { 
+                    text: 'Place Order', 
+                    callback_data: `order-${cart._id}-${cart.totalAmount}`, 
+                },
             ],
         ];
 
@@ -98,9 +99,11 @@ const view_cart = async (chatId) => {
             },
         });
     } catch (e) {
-       console.log(e.message)
+        console.log(e.message);
+        bot.sendMessage(chatId, 'An error occurred while viewing your cart.');
     }
 };
+
 
 const delete_cart_item = async (chatId, productId) => {
     try {
@@ -154,5 +157,3 @@ module.exports = {
     delete_cart_item,
     clear_cart,
 };
-
-

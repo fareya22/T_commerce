@@ -118,16 +118,16 @@ const show_product = async(chatId,id,count = 1,message_id = null)=>{
         },
 
         ] :
-        [
-            {
-                text: '💳Add to cart',
-                callback_data: `add_cart-${product._id}`
-            }
-        ]
-
         // [
-        //      { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+        //     {
+        //         text: '💳Add to cart',
+        //         callback_data: `add_cart-${product._id}-${count}`
+        //     }
         // ]
+
+        [
+             { text: 'Place an order',callback_data: `order-${product._id}-${count}` }
+        ]
     ]
     
         if(message_id > 0) {

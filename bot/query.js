@@ -41,7 +41,7 @@ bot.on('callback_query', async query => {
     if (data.includes('order-')) {
         let id = data.split('-');
         console.log(id);
-        ready_order(chatId, id[1], id[2]);
+        await ready_order(chatId, id[1], id[2]);
     }
 
     if (data.includes('more_count-')) {
@@ -82,21 +82,26 @@ bot.on('callback_query', async query => {
 
     if (data.includes('add_cart-')) {
         let id = data.split('-');
+        console.log(id)
         add_to_cart(chatId, id[1], id[2]);
     }
+
+   
+    
+    
 
     // if (data === 'view_cart') {
     //     await view_cart(chatId);
     // }
 
-    // if (data.includes('delete_cart_item-')) {
-    //     let id = data.split('-')[1];
-    //     await delete_cart_item(chatId, id);
-    // }
+    if (data.includes('delete_cart_item-')) {
+        let id = data.split('-')[1];
+        await delete_cart_item(chatId, id);
+    }
 
-    // if (data === 'clear_cart') {
-    //     await clear_cart(chatId);
-    // }
+    if (data === 'clear_cart') {
+        await clear_cart(chatId);
+    }
 
     if (data.includes('product_')) {
         let id = data.split('_')[1];
@@ -119,3 +124,4 @@ bot.on('callback_query', async query => {
 });
 
 module.exports = bot;
+ 

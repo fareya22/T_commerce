@@ -8,6 +8,12 @@ const {get_all_users} = require('./helper/users')
 const {get_all_categories,new_category, save_category} = require('./helper/category')
 
 const {add_product_next} = require('./helper/product'); 
+const {    
+  add_to_cart,
+  view_cart,
+  delete_cart_item,
+  clear_cart} = require('./helper/cart'); 
+
 const { end_order } = require('./helper/order');
 
 bot.on('message', async msg => {
@@ -23,9 +29,6 @@ bot.on('message', async msg => {
       start(msg);
     }
 
-    // if ( user.action === 'order'){
-    //   end_order(chatId,msg.text)
-    // }
 
      if(user) {
         if(user.action === 'request_contact' &&  !user.phone){
@@ -51,6 +54,10 @@ bot.on('message', async msg => {
     new_category(msg)
    }
 
+
+   if ( user.action === 'order'){
+    end_order(chatId,msg.text)
+  }
 
   //if(user.action === 'view_cart')
 
