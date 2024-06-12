@@ -5,6 +5,7 @@ const Product = require('../../model/product');
 const { adminKeyboard, userKeyboard } = require('../menu/keyboard');
 const {clear_draft_product} = require('../helper/product')
 
+
 const get_all_categories = async (chatId, page = 1,message_id = null) => {
 
     clear_draft_product()
@@ -45,18 +46,18 @@ const get_all_categories = async (chatId, page = 1,message_id = null) => {
  const inline_keyboard = [
     ...list,
     [
-        {
-            text: 'Back',
-            callback_data: page > 1 ? 'back_category' : page,
-        },
-        {
-            text: page.toString(),
-            callback_data: '0'
-        },
-        {
-            text: 'Next',
-            callback_data: limit === categories.length ? 'next_category' : page,
-        },
+        // {
+        //     text: 'Back',
+        //     callback_data: page > 1 ? 'back_category' : page,
+        // },
+        // {
+        //     text: page.toString(),
+        //     callback_data: '0'
+        // },
+        // {
+        //     text: 'Next',
+        //     callback_data: limit === categories.length ? 'next_category' : page,
+        // },
     ],
     
     user.admin
@@ -184,19 +185,19 @@ const show_category = async (chatId, id, page = 1) => {
             inline_keyboard: [
                 ...list,
                 [
-                    {
-                        text: 'Back',
-                        callback_data: page > 1 ? 'back_product' : page,
-                    },
-                    {
-                        text: page,
-                        callback_data: '0'
-                    },
-                    {
-                        text: 'Next',
-                        callback_data: limit === products.length ? 'next_product' : 
-                        page,
-                    },
+                    // {
+                    //     text: 'Back',
+                    //     callback_data: page > 1 ? 'back_product' : page,
+                    // },
+                    // {
+                    //     text: page,
+                    //     callback_data: '0'
+                    // },
+                    // {
+                    //     text: 'Next',
+                    //     callback_data: limit === products.length ? 'next_product' : 
+                    //     page,
+                    // },
                 ],
                 ... keyboards,
             ],
@@ -264,6 +265,12 @@ const save_category = async (chatId,title) => {
         \nSelect from the menu`)       //not working
 }
 
+
+const show_manual = async (chatId) => {
+    bot.sendMessage(chatId,`⏩ /start ➡️--- to start the bot ( Admin/ Customer)\n☢️ Share Your Phone Number ➡️ To login ( Admin / Customers)\n☢️ Catalog ➡️ To view catalog(Admin/Customers)\n☢️ DashBoard ➡️ To view profile(Admin/Customers)\n☢️ Cart ➡️ To view cart (Customer) \n☣️ Add ➡️ to add product /category (Admin) \n☢️ Add to Cart ➡️ to add product to cart (Customer)\n☢️ Delete ➡️ to delete product/category (Admin/Users)\n☢️ Users ➡️ to see all user ( Admin) \n☢️ UserManual ➡️ to see "how to use" \n☢️ Place Order ➡️ to place order \n☢️ Edit ➡️ To edit (Admin)\n☢️ Confirm / Cancel Order ➡️ to confirm / cancel order ( Admin)\n☢️ Send Location ➡️ to share location( Customer) \n☢️ Clear Cart ➡️ to remove items from cart`)
+
+}
+
 module.exports = {
     get_all_categories,
     add_category,
@@ -273,4 +280,5 @@ module.exports = {
     remove_category,
     edit_category,
     save_category,
+    show_manual,
 };

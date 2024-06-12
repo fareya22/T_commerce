@@ -7,7 +7,7 @@ const axios = require("axios");
 
 const baseUrl = "http://localhost:3005/";
 
-// Ready Order Function
+
 const ready_order = async (chatId, cartId, totalAmount) => {
     try {
         console.log(`Processing order for chatId: ${chatId}, cartId: ${cartId}, totalAmount: ${totalAmount}`);
@@ -112,12 +112,12 @@ const end_order = async (chatId, location) => {
                                 callback_data: `success_order-${order._id}`
                             }
                         ],
-                        [
-                            {
-                                text: 'Getting location',
-                                callback_data: `map_order-${order._id}`
-                            }
-                        ]
+                        // [
+                        //     {
+                        //         text: 'Getting location',
+                        //         callback_data: `map_order-${order._id}`
+                        //     }
+                        // ]
                     ]
                 }
             });

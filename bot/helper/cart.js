@@ -26,7 +26,7 @@ const add_to_cart = async (chatId, productId, quantity) => {
         const itemIndex = cart.items.findIndex(item => item.product === productId);
 
         if (itemIndex > -1) {
-            // Update existing item quantity and totalPrice
+    
             cart.items[itemIndex].quantity += quantity;
             cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.price;
         } else {

@@ -1,8 +1,8 @@
 const { bot } = require('./bot');
 const User = require('../model/user');
 const { start, requestContact } = require('./helper/start');
-const { get_all_users } = require('./helper/users');
-const { get_all_categories, new_category, save_category } = require('./helper/category');
+const { get_all_users,show_dashboard } = require('./helper/users');
+const { get_all_categories, new_category, save_category,show_manual } = require('./helper/category');
 const { add_product_next, handle_edit_action,edit_name } = require('./helper/product');
 const { view_cart } = require('./helper/cart');
 const { end_order } = require('./helper/order');
@@ -35,6 +35,18 @@ bot.on('message', async msg => {
             view_cart(chatId);
             return;
         }
+        
+        if (text === 'UserManual') {
+            show_manual(chatId);
+            return;
+        }
+
+        if (text === 'DashBoard') {
+            show_dashboard(msg);
+            return;
+        }
+        
+        
 
         if (user.action === 'add_category') {
             new_category(msg);
@@ -79,13 +91,18 @@ bot.on('message', async msg => {
             return;
         }
 
-        if (user.action.includes('edit_product_picture-')) {
+        if (user.action.includes('edit_product_picture')) {
+            const productId = user.action.split('-')[1];
+    
             if (msg.photo) {
-                add_product_next(chatId, msg.photo.at(-1).file_id, 'img');
+                //const photoFileId = img[img.length - 1].file_id; // Get the highest resolution photo
+                await handle_edit_action(chatId, productId, msg.photo.at(-1).file_id, 'edit_product_picture');
             } else {
-                bot.sendMessage(chatId, 'Upload a simple image of the product');
+                bot.sendMessage(chatId, 'Please upload a picture of the product.');
             }
+            return;
         }
+    
         
     }
 });

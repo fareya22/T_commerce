@@ -2,7 +2,7 @@ const { bot } = require('./bot');
 const User = require('../model/user');
 const Cart = require('../model/cart');
 const Product = require('../model/product');
-const { add_category, pagination_category, show_category, remove_category, edit_category, get_all_categories } = require('./helper/category');
+const { add_category, pagination_category, show_category, remove_category, edit_category, get_all_categories, show_manual } = require('./helper/category');
 const {  add_product,add_product_next,clear_draft_product,show_product,delete_product, edit_product,edit_name,edit_price,edit_description, edit_picture } = require('./helper/product');
 const { ready_order, show_location, change_order } = require('./helper/order');
 const { add_to_cart,start_add_to_cart, delete_cart_item, clear_cart,process_add_to_cart, } = require('./helper/cart');
@@ -148,6 +148,10 @@ bot.on('callback_query', async query => {
 
     if (data === 'catalog') {
         get_all_categories(chatId);
+    }
+
+    if (data === 'UserManual') {
+        show_manual(chatId);
     }
 });
 

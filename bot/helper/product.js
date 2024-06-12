@@ -229,22 +229,23 @@ const edit_price = async (chatId, productId) => {
 const edit_picture = async (chatId, productId) => {
     try {
         const user = await User.findOne({ chatId }).lean();
-        
+
         // Check if user is found
         if (!user) {
             throw new Error('User not found.');
         }
 
         // Update user's action to indicate editing picture for a specific product
-        await User.findByIdAndUpdate(user._id, { action: `edit_picture-${productId}` });
-        
-        // Prompt user to enter the new URL for the product picture
-        bot.sendMessage(chatId, `Enter the new URL for the product picture:`);
+        await User.findByIdAndUpdate(user._id, { action: `edit_product_picture-${productId}` });
+
+        // Prompt user to upload the new picture for the product
+        bot.sendMessage(chatId, `Please upload the new picture for the product:`);
     } catch (error) {
         console.error(`Error in edit_picture: ${error.message}`);
         bot.sendMessage(chatId, 'An error occurred while editing the product picture.');
     }
 };
+
 
 
 const edit_description = async (chatId, productId) => {
@@ -304,14 +305,13 @@ const handle_edit_action = async (chatId, productId, newValue, action) => {
         console.log('Updated Product:', updatedProduct);
 
         // Notify the user about the successful update
-        bot.sendMessage(chatId, `Product ${attribute} updated successfully.`);
+        bot.sendMessage(chatId, `Product ${fieldMapping[attribute]} updated successfully.`);
     } catch (error) {
         console.error(`Error in handle_edit_action: ${error.message}`);
         // Notify the user about the error
         bot.sendMessage(chatId, 'An error occurred while updating the product.');
     }
-};
-
+}
 
 
 
