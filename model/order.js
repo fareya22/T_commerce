@@ -1,22 +1,33 @@
-const {Schema,model } = require ('mongoose')
 
-const Order = new Schema ({
-    user:{
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const Order = new Schema({
+    user: {
         type: Schema.Types.ObjectId,
         ref: 'User',
+        required: true
     },
-    product:{
-        type: Schema.Types.ObjectId,
-        ref: 'Product',
+    products: [{
+        product: {
+            type: Schema.Types.ObjectId,
+            ref: 'Product',
+        }
+    }],
+    totalAmount: {
+        type: Number,
+        required: true
     },
-    count: Number,
     location: {
         latitude: Number,
         longitude: Number
     },
-    createdAt: Date,
-    status:{
-        type:Number,
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    status: {
+        type: Number,
         default: 0
     }
 });
@@ -28,4 +39,5 @@ const Order = new Schema ({
  3=canceled
 */
 
-module.exports = model('Order',Order)
+//module.exports = model('Order', Order);
+module.exports = mongoose.model('Order',Order);

@@ -12,7 +12,7 @@ const add_to_cart = async (chatId, productId, quantity) => {
             bot.sendMessage(chatId, 'Product not found.');
             return;
         }
- 
+
         let cart = await Cart.findOne({ user: user._id }); 
 
         if (!cart) {
@@ -23,11 +23,14 @@ const add_to_cart = async (chatId, productId, quantity) => {
             });
         }
 
-        const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+        const itemIndex = cart.items.findIndex(item => item.product === productId);
 
         if (itemIndex > -1) {
+            // Update existing item quantity and totalPrice
             cart.items[itemIndex].quantity += quantity;
+            cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.price;
         } else {
+            // Add new item to the cart
             cart.items.push({
                 product: productId,
                 quantity: quantity,
@@ -36,28 +39,17 @@ const add_to_cart = async (chatId, productId, quantity) => {
         }
 
         // Recalculate totalAmount for the cart
-        let totalAmount = 0;
-        for (const item of cart.items) {
-            if (isNaN(item.totalPrice) || item.totalPrice <= 0) {
-                item.totalPrice = item.quantity * product.price;
-            }
-            totalAmount += item.totalPrice;
-        }
-        cart.totalAmount = totalAmount;
-        //console.log(cart.totalAmount);
+        cart.totalAmount = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
         await cart.save();
 
         bot.sendMessage(chatId, `Added ${quantity} ${product.title}(s) to your cart.`);
-        bot.sendMessage(chatId,`Total amount : ${cart.totalAmount}`);
+        bot.sendMessage(chatId, `Total amount: ${cart.totalAmount}`);
     } catch (e) {
         console.log(e.message);
         bot.sendMessage(chatId, 'An error occurred while adding to the cart.');
     }
 };
-
-
-
 
 const view_cart = async (chatId) => {
     try {
@@ -71,7 +63,7 @@ const view_cart = async (chatId) => {
 
         const list = cart.items.map((item) => [
             {
-                text: `${item.product.title} - ${item.quantity} items - ${item.totalPrice} total`,
+                text: `${item.product.title} - ${item.quantity} items - $${item.totalPrice}`,
                 callback_data: `delete_cart_item-${item.product._id}`,
             },
         ]);
@@ -104,7 +96,6 @@ const view_cart = async (chatId) => {
     }
 };
 
-
 const delete_cart_item = async (chatId, productId) => {
     try {
         const user = await User.findOne({ chatId }).lean();
@@ -120,12 +111,8 @@ const delete_cart_item = async (chatId, productId) => {
         if (itemIndex > -1) {
             cart.items.splice(itemIndex, 1);
 
-            // Calculate the totalAmount without using reduce
-            let totalAmount = 0;
-            for (const item of cart.items) {
-                totalAmount += item.totalPrice;
-            }
-            cart.totalAmount = totalAmount;
+            // Recalculate totalAmount for the cart
+            cart.totalAmount = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
             await cart.save();
 
@@ -135,8 +122,9 @@ const delete_cart_item = async (chatId, productId) => {
             bot.sendMessage(chatId, 'Item not found in your cart.');
         }
     } catch (e) {
-           console.log(e.message)
-         }
+        console.log(e.message);
+        bot.sendMessage(chatId, 'An error occurred while removing the item.');
+    }
 };
 
 const clear_cart = async (chatId) => {

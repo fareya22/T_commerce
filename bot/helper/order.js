@@ -1,69 +1,88 @@
-const Product = require('../../model/product')
-const User = require('../../model/user')
-const Cart = require('../../model/cart')
-const Order = require('../../model/order')
-const {bot } = require('../bot')
+const User = require('../../model/user');
+const Cart = require('../../model/cart');
+const Order = require('../../model/order');
+const { bot } = require('../bot');
 const { v4: uuid } = require("uuid");
-const baseUrl = "http://localhost:3005/";
 const axios = require("axios");
 
-const ready_order = async(chatId,product,count) =>  {
-    let user = await User.findOne({chatId}).lean()
-    let orders = await Order.find({user,status: 0}).lean()
+const baseUrl = "http://localhost:3005/";
 
-    await Promise.all(orders.map(async (order) =>{
-        await Order.findByIdAndDelete(order._id)
-    }))
+// Ready Order Function
+const ready_order = async (chatId, cartId, totalAmount) => {
+    try {
+        console.log(`Processing order for chatId: ${chatId}, cartId: ${cartId}, totalAmount: ${totalAmount}`);
+        
+        const user = await User.findOne({ chatId }).lean();
+        if (!user) throw new Error('User not found');
+        console.log(`Found user: ${user.name}`);
 
-    await User.findByIdAndUpdate(user._id,{
-        ...user,
-        action: 'order'
-    },{new: true})
+        const orders = await Order.find({ user: user._id, status: 0 }).lean();
+        await Promise.all(orders.map(async (order) => {
+            await Order.findByIdAndDelete(order._id);
+        }));
+        console.log(`Deleted unfinished orders for user: ${user.name}`);
 
-    const newOrder = new Order({
-        user: user._id,
-        product,
-        count,
-        status: 0
-    })
+        await User.findByIdAndUpdate(user._id, {
+            ...user,
+            action: 'order'
+        }, { new: true });
 
-    const order = await newOrder.save()
+        const cart = await Cart.findById(cartId).populate('items.product').lean();
+        if (!cart) throw new Error('Cart not found');
+        console.log(`Found cart for user: ${user.name}`);
 
-    bot.sendMessage(chatId,`Send the delivery address to order the product`,{
-        reply_markup: {
-            keyboard: [
-                [
-                    {
-                        text:'Send the location',
-                        request_location: true,
-                        action: `order`
-                    }
-                ]
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: true,
-        },
-    });
+        const newOrder = new Order({
+            user: user._id,
+            products: cart.items.map(item => ({
+                product: item.product._id
+            })),
+            totalAmount,
+            status: 0
+        });
+
+        const order = await newOrder.save();
+        console.log(`Created new order: ${order._id} for user: ${user.name}`);
+
+        bot.sendMessage(chatId, `Send the delivery address to order the products`, {
+            reply_markup: {
+                keyboard: [
+                    [
+                        {
+                            text: 'Send the location',
+                            request_location: true,
+                            action: `order`
+                        }
+                    ]
+                ],
+                resize_keyboard: true,
+                one_time_keyboard: true,
+            },
+        });
+    } catch (error) {
+        console.error(`Error in ready_order: ${error.message}`);
+        bot.sendMessage(chatId, 'An error occurred while processing the order.');
+    }
 };
 
-
-
+// End Order Function
 const end_order = async (chatId, location) => {
     try {
-        let user = await User.findOne({ chatId }).lean();
-        let admin = await User.findOne({ admin: true }).lean();
+        const user = await User.findOne({ chatId }).lean();
+        const admin = await User.findOne({ admin: true }).lean();
+        if (!user) throw new Error('User not found');
+        if (!admin) throw new Error('Admin not found');
 
         await User.findByIdAndUpdate(user._id, {
             ...user,
             action: 'end_order'
         }, { new: true });
 
-        let order = await Order.findOne({
+        const order = await Order.findOne({
             user: user._id,
             status: 0
-        }).populate(['product']).lean();
+        }).populate('products.product').lean();
 
-        if (order && order.product) {
+        if (order && order.products.length > 0) {
             await Order.findByIdAndUpdate(order._id, {
                 ...order,
                 location,
@@ -76,8 +95,11 @@ const end_order = async (chatId, location) => {
                 }
             });
 
-            await bot.sendMessage(admin.chatId, `New order.\n Customer: ${user.name}\nProduct: ${order.product.title}\n
-            Quantity: ${order.count} items\nTotal price: ${order.count * order.product.price} taka`, {
+            const productDetails = order.products.map(p => {
+                return `Product: ${p.product.title}`;
+            }).join('\n');
+
+            await bot.sendMessage(admin.chatId, `New order.\nCustomer: ${user.name}\n${productDetails}\nTotal price: ${order.totalAmount} taka`, {
                 reply_markup: {
                     inline_keyboard: [
                         [
@@ -100,37 +122,40 @@ const end_order = async (chatId, location) => {
                 }
             });
         } else {
-            bot.sendMessage(chatId, 'Error: Order not found or product not available.');
+            bot.sendMessage(chatId, 'Error: Order not found or products not available.');
         }
     } catch (error) {
-        console.error(error);
+        console.error(`Error in end_order: ${error.message}`);
         bot.sendMessage(chatId, 'An error occurred while processing the order.');
     }
 };
 
+const change_order = async (chatId, id, status) => {
+    try {
+        let admin = await User.findOne({ chatId }).lean();
+        if (!admin || !admin.admin) {
+            bot.sendMessage(chatId, 'You are not authorized to perform this action');
+            return;
+        }
 
+        let order = await Order.findById(id).populate('user').populate('products.product').lean();
+        if (!order) throw new Error('Order not found');
 
-const change_order = async (chatId,id,status) =>{
-    let admin = await User.findOne({chatId}).lean()
-    if (admin.admin) {
-        let order = await Order.findById(id).populate(['user','product']).lean()
-        
-        let amount = order.product.price
-        let cus_name = order.user.name
-        let cus_phone = "01717667736"
-        let desc = "kichu ekta"
-        let currency = "BDT"
-        let cus_email = "someone@gmail.com"
+        let totalAmount = order.totalAmount;
+        let cus_name = order.user.name;
+        let cus_phone = "01717667736";
+        let desc = "Order details";
+        let currency = "BDT";
+        let cus_email = "someone@gmail.com";
 
-        // const { cus_email, cus_name, cus_phone, amount, desc, currency, } = req.body;
         const formData = {
             cus_name,
             cus_email,
             cus_phone,
-            amount,
+            amount: totalAmount,
             tran_id: uuid(),
-            signature_key:"dbb74894e82415a2f7ff0ec3a97e4183",
-            store_id:"aamarpaytest", // Ensure this matches the store ID provided for sandbox testing
+            signature_key: "dbb74894e82415a2f7ff0ec3a97e4183",
+            store_id: "aamarpaytest",
             currency,
             desc,
             cus_add1: "53, Gausul Azam Road, Sector-14, Dhaka, Bangladesh",
@@ -140,61 +165,72 @@ const change_order = async (chatId,id,status) =>{
             success_url: `${baseUrl}callback`,
             fail_url: `${baseUrl}callback`,
             cancel_url: `${baseUrl}callback`,
-            type: "json", // This is must required for JSON request
+            type: "json",
             opt_a: order._id,
             opt_b: chatId
-          };
-        
-          try {
+        };
+
+        try {
             const { data } = await axios.post("https://sandbox.aamarpay.com/jsonpost.php", formData);
-            console.log("Aamarpay Response: ", data, formData);
-            
+            console.log("Aamarpay Response: ", data);
+            console.log("Form Data Sent: ", formData);
+
             if (data.result !== "true") {
-              return "server error"
+                console.error(`Aamarpay Error Response: ${JSON.stringify(data)}`);
+                bot.sendMessage(chatId, 'Server error occurred while processing payment');
+                return;
             }
-            await Order.findByIdAndUpdate(order._id,{...order, status, createdAt: new Date()},{new : true})
-            const msg = status == 2 ? 'Your order has been accepted, please pay using this url to complete your order: ' + data.payment_url  : 'Your order has been cancelled'
-            await bot.sendMessage(order.user.chatId,msg)
-            await bot.sendMessage(chatId,'The order status has changed')
-          }catch(e) {
-            console.log(e.message)
-          }
-        
 
-       
-    }else{
-        bot.sendMessage(chatId,'Its not possible for you')
-    }
+            await Order.findByIdAndUpdate(order._id, {
+                ...order,
+                status,
+                createdAt: new Date()
+            }, { new: true });
 
-}
+            const msg = status == 2
+                ? 'Your order has been accepted, please pay using this URL to complete your order: ' + data.payment_url
+                : 'Your order has been cancelled';
 
-const show_location = async (chatId,_id) => {
-    try {
-        console.log({chatId, _id})
-        let user = await User.findOne({chatId}).lean()
-        if (user.admin){
-            let order = await Order.findById(_id).lean()
-            console.log(order.location)
-        bot.sendMessage(chatId,order.location)
-        }else{
-        await bot.sendMessage(chatId,`You are not allowed to enter this place`)
+            await bot.sendMessage(order.user.chatId, msg);
+            await bot.sendMessage(chatId, 'The order status has changed');
+
+        } catch (e) {
+            console.error(`Error in payment processing: ${e.message}`);
+            console.error("Error Response Data: ", e.response ? e.response.data : 'No response data');
+            bot.sendMessage(chatId, 'An error occurred while processing the payment');
         }
+
+    } catch (error) {
+        console.error(`Error in change_order: ${error.message}`);
+        bot.sendMessage(chatId, 'An error occurred while changing the order status.');
     }
-    catch(e) {
-        console.log(e.message)
-    }
-
-}
-
-module.exports ={
-    ready_order,
-    end_order,
-    show_location,
-    change_order
-
 };
 
 
 
+// Show Location Function
+const show_location = async (chatId, _id) => {
+    try {
+        let user = await User.findOne({ chatId }).lean();
+        if (user.admin) {
+            let order = await Order.findById(_id).lean();
+            if (order && order.location) {
+                bot.sendMessage(chatId, `Location: Latitude ${order.location.latitude}, Longitude ${order.location.longitude}`);
+            } else {
+                bot.sendMessage(chatId, 'Location information is not available for this order.');
+            }
+        } else {
+            bot.sendMessage(chatId, `You are not allowed to access this information.`);
+        }
+    } catch (e) {
+        console.log(`Error in show_location: ${e.message}`);
+        bot.sendMessage(chatId, 'An error occurred while fetching the location.');
+    }
+};
 
-
+module.exports = {
+    ready_order,
+    end_order,
+    show_location,
+    change_order
+};

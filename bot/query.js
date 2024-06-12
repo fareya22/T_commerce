@@ -3,10 +3,12 @@ const User = require('../model/user');
 const Cart = require('../model/cart');
 const Product = require('../model/product');
 const { add_category, pagination_category, show_category, remove_category, edit_category, get_all_categories } = require('./helper/category');
-const { delete_product, add_product, show_product, add_product_next } = require('./helper/product');
+const {  add_product,add_product_next,clear_draft_product,show_product,delete_product, edit_product,edit_name,edit_price,edit_description, edit_picture } = require('./helper/product');
 const { ready_order, show_location, change_order } = require('./helper/order');
 const { add_to_cart,start_add_to_cart, delete_cart_item, clear_cart,process_add_to_cart, } = require('./helper/cart');
 const { adminKeyboard, userKeyboard } = require('./menu/keyboard');
+
+
 
 bot.on('callback_query', async query => {
     const { data } = query;
@@ -41,7 +43,7 @@ bot.on('callback_query', async query => {
     if (data.includes('order-')) {
         let id = data.split('-');
         console.log(id);
-        await ready_order(chatId, id[1], id[2]);
+        ready_order(chatId, id[1], id[2]);
     }
 
     if (data.includes('more_count-')) {
@@ -79,6 +81,32 @@ bot.on('callback_query', async query => {
         let id = data.split('-')[1];
         add_product(chatId, id);
     }
+
+    if (data.includes('edit_product-')) {
+        let id = data.split('-')[1];
+        edit_product(chatId, id);
+    }
+
+    if (data.includes('edit_name-')) {
+        let id = data.split('-')[1];
+        edit_name(chatId, id);
+    }
+
+    if (data.includes('edit_price-')) {
+        let id = data.split('-')[1];
+        edit_price(chatId, id);
+    }
+
+    if (data.includes('edit_description-')) {
+        let id = data.split('-')[1];
+        edit_description(chatId, id);
+    }
+
+    if (data.includes('edit_picture-')) {
+        let id = data.split('-')[1];
+        edit_picture(chatId, id);
+    }
+
 
     if (data.includes('add_cart-')) {
         let id = data.split('-');

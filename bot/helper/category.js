@@ -164,10 +164,10 @@ const show_category = async (chatId, id, page = 1) => {
             }
         ],
         [
-            {
-                text: 'Edit Category',
-                callback_data: `edit_category-${category._id}`
-            },
+            // {
+            //     text: 'Edit Category',
+            //     callback_data: `edit_category-${category._id}`
+            // },
             {
                 text: 'Delete Category',
                 callback_data: `del_category-${category._id}`
