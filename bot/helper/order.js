@@ -143,7 +143,7 @@ const change_order = async (chatId, id, status) => {
 
         let totalAmount = order.totalAmount;
         let cus_name = order.user.name;
-        let cus_phone = "01717667736";
+        let cus_phone = "01521705586";
         let desc = "Order details";
         let currency = "BDT";
         let cus_email = "someone@gmail.com";
